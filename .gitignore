@@ -1,5 +1,8 @@
 .idea/
 venv/
+.python-version
+
+**/.env
 
 # dependencies
 /react-ui-old/node_modules

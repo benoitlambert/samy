@@ -43,15 +43,20 @@ except KeyError:
 
 CSRF_COOKIE_HTTPONLY = True
 
-try:
-    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.0.55', os.environ['HOST']]
-    CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:3000', 'http://localhost:3000', 'http://192.168.0.55:3000',
-                            'http://localhost',
-                            'https://' + os.environ['HOST']]
-except:
-    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.0.55']
-    CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:3000', 'http://localhost:3000', 'http://192.168.0.55:3000',
-                            'http://localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.0.55']
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:3000',
+    'http://192.168.0.55:3000',
+    'http://127.0.0.1:8080',
+
+    'http://localhost',
+    'http://localhost:3000',
+    'http://localhost:8080',
+]
+if 'HOST' in os.environ:
+    ALLOWED_HOSTS.append(os.environ['HOST'])
+    CSRF_TRUSTED_ORIGINS.append(f"https://{os.environ['HOST']}")
 
 DJANGO_SUPERUSER_USERNAME = os.environ['DJANGO_SUPERUSER_USERNAME']
 DJANGO_SUPERUSER_PASSWORD = os.environ['DJANGO_SUPERUSER_PASSWORD']
@@ -103,8 +108,10 @@ AUTH_USER_MODEL = 'api.CustomUser'
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8000',
     'http://localhost:3000',
+    'http://localhost:8080',
     'http://127.0.0.1:8000',
     'http://127.0.0.1:3000',
+    'http://127.0.0.1:8080',
     'http://localhost',
 ]
 
@@ -131,15 +138,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'samy.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -192,39 +190,21 @@ except KeyError:
 
 # MySQL
 
+def get_mysql_env(key1, key2, default=''):
+    return os.getenv(key1, os.getenv(key2, default))
+
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'samy',
-        'HOST': '127.0.0.1',
-        'PORT': '3307',
-        'USER': 'root',
-        'PASSWORD': 'plumeplume',
-        'CHARSET': 'utf8'
+        'NAME': get_mysql_env('MYSQL_DB_NAME', 'MYSQL_DBNAME', 'samy_db'),
+        'USER': get_mysql_env('MYSQL_DB_USER', 'MYSQL_USER', 'root'),
+        'PASSWORD': get_mysql_env('MYSQL_DB_PASSWORD', 'MYSQL_PASSWORD', ''),
+        'HOST': get_mysql_env('MYSQL_DB_HOST', 'MYSQL_HOST', '127.0.0.1'),
+        'PORT': get_mysql_env('MYSQL_DB_PORT', 'MYSQL_PORT', '3306'),
+        'CHARSET': 'utf8',
     }
 }
-
-try:
-    DATABASES['default']['HOST'] = os.environ['MYSQL_HOST']
-except KeyError:
-    print('MySql DB host is not present in the environment.')
-try:
-    DATABASES['default']['PORT'] = os.environ['MYSQL_PORT']
-except KeyError:
-    print('MySql DB port is not present in the environment.')
-try:
-    DATABASES['default']['USER'] = os.environ['MYSQL_USER']
-except KeyError:
-    print('MySql DB user is not present in the environment.')
-try:
-    DATABASES['default']['PASSWORD'] = os.environ['MYSQL_PASSWORD']
-except KeyError:
-    print('MySql DB password is not present in the environment.')
-try:
-    DATABASES['default']['NAME'] = os.environ['MYSQL_DBNAME']
-except KeyError:
-    print('MySql DB NAME is not present in the environment.')
 
 # storage
 STORAGES = {
