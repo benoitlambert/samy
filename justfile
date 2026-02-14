@@ -33,7 +33,7 @@ unseed:
     uv run python manage.py unseed
 
 docker-deploy:
-    if [ ! -f ".env" ]; then mv .env.example .env; fi
+    if [ ! -f ".env" ]; then cp .env.example .env; fi
     cd react-ui && npm ci && npm run build
     docker compose up -d --build
 
