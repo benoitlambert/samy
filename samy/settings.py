@@ -31,8 +31,6 @@ try:
     MEDIA_URL = 'media/'
     STATIC_ROOT = './static/'
     STATIC_URL = 'static/'
-    # CSRF_COOKIE_SECURE = False
-    # SESSION_COOKIE_SECURE = False
 except KeyError:
     DEBUG = False
 
@@ -43,16 +41,18 @@ except KeyError:
 
 CSRF_COOKIE_HTTPONLY = True
 
+FRONTEND_PORT = os.environ.get('FRONTEND_PORT', '3000')
+BACKEND_PORT = os.environ.get('BACKEND_PORT', '8080')
+
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.0.55']
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://127.0.0.1:3000',
-    'http://192.168.0.55:3000',
-    'http://127.0.0.1:8080',
-
+    f'http://127.0.0.1:{FRONTEND_PORT}',
+    f'http://192.168.0.55:{FRONTEND_PORT}',
+    f'http://127.0.0.1:{BACKEND_PORT}',
     'http://localhost',
-    'http://localhost:3000',
-    'http://localhost:8080',
+    f'http://localhost:{FRONTEND_PORT}',
+    f'http://localhost:{BACKEND_PORT}',
 ]
 if 'HOST' in os.environ:
     ALLOWED_HOSTS.append(os.environ['HOST'])
@@ -75,14 +75,14 @@ INSTALLED_APPS = [
     'corsheaders',
     'api',
     'storages',
-    'django_filters'
+    'django_filters',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # Note that this needs to be placed above CommonMiddleware
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -93,25 +93,23 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication'
+        'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAdminUser',
-    ]
+    ],
 }
 
 AUTH_USER_MODEL = 'api.CustomUser'
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8000',
-    'http://localhost:3000',
-    'http://localhost:8080',
-    'http://127.0.0.1:8000',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:8080',
+    f'http://localhost:{BACKEND_PORT}',
+    f'http://localhost:{FRONTEND_PORT}',
+    f'http://127.0.0.1:{BACKEND_PORT}',
+    f'http://127.0.0.1:{FRONTEND_PORT}',
     'http://localhost',
 ]
 
@@ -122,8 +120,7 @@ ROOT_URLCONF = 'samy.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -138,36 +135,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'samy.wsgi.application'
 
-
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'Europe/Brussels'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 # Default primary key field type
@@ -175,16 +159,18 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-TEMPLATED_EMAIL_BACKEND = 'templated_email.backends.vanilla_django.TemplateBackend'
+# Email
 
-EMAIL_PORT = 587  # TLS
+TEMPLATED_EMAIL_BACKEND = 'templated_email.backends.vanilla_django.TemplateBackend'
+EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_TIMEOUT = 10
+
 try:
     EMAIL_HOST_USER = os.environ['SMTP_USERNAME']
     EMAIL_HOST_PASSWORD = os.environ['SMTP_PASSWORD']
-    EMAIL_HOST = os.environ["EMAIL_HOST"]
-    EMAIL_SOURCE = os.environ["EMAIL_SOURCE"]
+    EMAIL_HOST = os.environ['EMAIL_HOST']
+    EMAIL_SOURCE = os.environ['EMAIL_SOURCE']
 except KeyError:
     raise EnvironmentError('Email variables are not defined.')
 
@@ -192,7 +178,6 @@ except KeyError:
 
 def get_mysql_env(key1, key2, default=''):
     return os.getenv(key1, os.getenv(key2, default))
-
 
 DATABASES = {
     'default': {
@@ -206,23 +191,24 @@ DATABASES = {
     }
 }
 
-# storage
+# Storage
+
 STORAGES = {
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
     },
-    "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": {
+    'default': {
+        'BACKEND': 'storages.backends.s3.S3Storage',
+        'OPTIONS': {
             'access_key': os.environ['AWS_S3_ACCESS_KEY_ID'],
             'secret_key': os.environ['AWS_S3_SECRET_ACCESS_KEY'],
             'bucket_name': os.environ['AWS_STORAGE_BUCKET_NAME'],
             'querystring_auth': False,
             'region_name': 'eu-central-1',
-            'default_acl': 'public-read'
+            'default_acl': 'public-read',
         },
     },
 }
 
 if DEBUG:
-    INTERNAL_IPS = ["127.0.0.1", "localhost"]
+    INTERNAL_IPS = ['127.0.0.1', 'localhost']

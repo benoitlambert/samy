@@ -1,6 +1,8 @@
 set dotenv-load
 
 _load_local := "set -a; [ -f .env.local ] && . .env.local; set +a"
+_load_env := "set -a; [ -f .env ] && . .env; set +a"
+_load_example := "set -a; [ -f .env.example ] && . .env.example; set +a"
 
 dev-backend:
     uv run python manage.py runserver
@@ -31,8 +33,9 @@ unseed:
     uv run python manage.py unseed
 
 docker-deploy:
-	if [ ! -f ".env" ]; then mv .env.example .env; fi
-	docker compose up -d --build
+    if [ ! -f ".env" ]; then mv .env.example .env; fi
+    cd react-ui && npm ci && npm run build
+    docker compose up -d --build
 
 docker-seed:
     docker compose exec samy python manage.py seed
