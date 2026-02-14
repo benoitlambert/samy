@@ -44,7 +44,7 @@ CSRF_COOKIE_HTTPONLY = True
 FRONTEND_PORT = os.environ.get('FRONTEND_PORT', '3000')
 BACKEND_PORT = os.environ.get('BACKEND_PORT', '8080')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.0.55']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 CSRF_TRUSTED_ORIGINS = [
     f'http://127.0.0.1:{FRONTEND_PORT}',
